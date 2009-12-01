@@ -1,0 +1,6 @@
+Revision history for Perl extension MooseX::Types::IP.
+
+0.01  Tue Dec  1 17:02:12 2009
+	- original version; created by h2xs 1.23 with options
+		-AX MooseX::Types::IP
+
