@@ -1,11 +1,15 @@
 package MooseX::Types::IPv4; {
 
+  use 5.008008;
+
   use MooseX::Types
-    -declare => [qw/ip2 ip3 ip4/];
+    -declare => [qw/cidr ip2 ip3 ip4 ip4_binary netmask netmask4_binary/];
 
-  use MooseX::Types::Moose qw/Str/;
 
-  our $VERSION = '0.01';
+  use Moose::Util::TypeConstraints;
+  use MooseX::Types::Moose qw/Int Num Str/;
+
+  our $VERSION = '0.03';
 
 
   my $ip2valr .= '';
@@ -13,6 +17,16 @@ package MooseX::Types::IPv4; {
 
   my $ip4valr .= '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}';
      $ip4valr .= '(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$';
+
+
+  my $nmvalr .= '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}';
+     $nmvalr .= '(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$';
+
+
+  subtype cidr,
+    as Int,
+    where { /^(?:[0-2]?[0-9]||3[0-2])/ },
+    message { "$_ is not a valid CIDR " };
 
 
   ## No validation here yet. This is for a.b notation.
@@ -38,6 +52,49 @@ package MooseX::Types::IPv4; {
     as Str,
     where { /$ip4valr/ },
     message { "$_ is not a valid ip address " };
+
+
+  subtype ip4_binary,
+    as Num, #[ Base => '2', Precision => '32' ],
+    where { /^[01]{32}$/ },
+    message { "$_ is not a valid binary IP address " };
+
+
+  coerce ip4_binary,
+    from 'MooseX::Types::IPv4::ip4',
+    via { unpack('B32', pack('C4', split(/\D/, $_))); };
+
+
+  coerce ip4_binary,
+    from 'MooseX::Types::IPv4::ip3',
+    via { unpack('B32', pack('C2S', split(/\D/, $_))); };
+
+
+  coerce ip4_binary,
+    from 'MooseX::Types::IPv4::ip2',
+    via { unpack('B32', pack('CL', split(/\D/, $_))); };
+
+
+  subtype netmask,
+    as Str,
+    where { /$nmvalr/ },
+    message { "$_ is not a valid netmask: " };
+
+
+  subtype netmask4_binary,
+    as Num, #[ Base => '2', Precision => '32' ],
+    where { length($_) == 32 and /^(?:[1]{0,32}[0]{0,32})$/ },
+    message { "$_ is not a valid binary netmask address " };
+
+
+  coerce netmask4_binary,
+    from 'MooseX::Types::IPv4::netmask',
+    via { unpack('B32', pack('C4', split(/\D/, $_))); };
+
+
+  coerce netmask4_binary,
+    from 'MooseX::Types::IPv4::cidr',
+    via { ( ("1" x $_) . ("0" x (32 - $_)) ); };
 
 }
 
@@ -88,4 +145,3 @@ This library is free software, you can redistribute it and/or modify it under th
 terms as Perl itself.
 
 =cut
-
