@@ -47,13 +47,13 @@ __END__
 
 =head1 NAME
 
-MooseX::Types::IP - IP Address types
+MooseX::Types::IPv4 - IP Address types
 
 =head1 SYNOPSIS
 
     package MyClass;
     use Moose;
-    use MooseX::Types::IP qw/ip2 ip3 ip4/;
+    use MooseX::Types::IPv4 qw/ip2 ip3 ip4/;
     use namespace::autoclean;
 
     has 'ipaddress2' => ( isa => ip2, is => 'rw' required => 1 );
